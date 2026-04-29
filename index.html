@@ -966,5 +966,15 @@ function showToast(msg){
 renderCourts(courts);
 renderSaved();
 </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL = "https://phwppnohoganzapndhusj.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_owIV_XbToo3f_WNTFzZWKw_2PwPnB4T";
+
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  console.log("Supabase connected:", supabaseClient);
+</script>
 </body>
 </html>
