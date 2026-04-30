@@ -699,9 +699,9 @@ body::before{
 </div>
 
 <div class="toast" id="toast"></div>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const courts=[
+let courts=[
   {id:0,name:"UCSD North Tennis Courts",sport:"Tennis",sportIcon:"Tennis",
    address:"UCSD Campus, La Jolla",distance:"0.8 mi",
    courts:8,open:1,status:"busy",statusLabel:"Busy",
@@ -768,7 +768,7 @@ const courts=[
    schedule:[{time:"7 – 10 AM",pct:85,label:"Peak"},{time:"12 – 2 PM",pct:50,label:"Moderate"},{time:"5 – 7 PM",pct:40,label:"Light"},{time:"After dusk",pct:0,label:"Closed"}]},
 ];
 
-let savedCourts=new Set([0,4]);
+let savedCourts=new Set();
 let activeFilter='all';
 let ciSelections={};
 
@@ -963,18 +963,110 @@ function showToast(msg){
   t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);
 }
 
-renderCourts(courts);
-renderSaved();
-</script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+const SUPABASE_URL = "https://phwppnohoganzapndhusj.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_owIV_XbToo3f_WNTFzZWKw_2PwPnB4T";
 
-<script>
-  const SUPABASE_URL = "https://phwppnohoganzapndhusj.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_owIV_XbToo3f_WNTFzZWKw_2PwPnB4T";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+console.log("Supabase connected:", supabaseClient);
 
-  console.log("Supabase connected:", supabaseClient);
+function normalizeStatus(status) {
+  if (!status) return "unknown";
+
+  const s = status.toLowerCase();
+
+  if (s.includes("open") || s.includes("available")) return "open";
+  if (s.includes("light")) return "light";
+  if (s.includes("busy")) return "busy";
+  if (s.includes("full")) return "full";
+
+  return "unknown";
+}
+
+function minutesSince(timestamp) {
+  if (!timestamp) return 999;
+
+  const then = new Date(timestamp);
+  const now = new Date();
+
+  return Math.max(1, Math.round((now - then) / 60000));
+}
+
+function convertSupabaseCourt(row, index) {
+  const status = normalizeStatus(row.current_status);
+  const totalCourts = row.total_courts || 1;
+
+  let openCourts = 0;
+  let wait = "—";
+
+  if (status === "open") {
+    openCourts = totalCourts;
+    wait = "No wait";
+  } else if (status === "light") {
+    openCourts = Math.max(1, Math.ceil(totalCourts / 2));
+    wait = "No wait";
+  } else if (status === "busy") {
+    openCourts = Math.min(1, totalCourts);
+    wait = "10 – 20 min";
+  } else if (status === "full") {
+    openCourts = 0;
+    wait = "20+ min";
+  }
+
+  return {
+    id: index,
+    databaseId: row.id,
+    name: row.name || "Unnamed Court",
+    sport: row.sport_type || "Tennis",
+    sportIcon: row.sport_type || "Tennis",
+    address: row.address || "No address listed",
+    distance: "Nearby",
+    courts: totalCourts,
+    open: openCourts,
+    status: status,
+    statusLabel: row.current_status || "Unknown",
+    wait: wait,
+    lights: row.has_lights || false,
+    parking: row.has_parking ? "Available" : "Unknown",
+    bathroom: row.has_bathrooms ? "Yes" : "Unknown",
+    free: true,
+    reservation: false,
+    updatedMin: minutesSince(row.last_updated),
+    checkinsHour: 0,
+    notes: row.notes || "No notes yet.",
+    checkins: [],
+    schedule: [
+      { time: "7 – 9 AM", pct: 30, label: "Light" },
+      { time: "12 – 2 PM", pct: 50, label: "Moderate" },
+      { time: "5 – 8 PM", pct: 80, label: "Busy" },
+      { time: "8 – 10 PM", pct: 45, label: "Better" }
+    ]
+  };
+}
+
+async function loadCourtsFromSupabase() {
+  const { data, error } = await supabaseClient
+    .from("courts")
+    .select("*")
+    .order("name");
+
+  if (error) {
+    console.error("Error loading courts from Supabase:", error);
+    showToast("Could not load live courts");
+    renderCourts(courts);
+    renderSaved();
+    return;
+  }
+
+  courts = data.map(convertSupabaseCourt);
+
+  renderCourts(courts);
+  renderSaved();
+
+  console.log("Loaded courts from Supabase:", courts);
+}
+
+loadCourtsFromSupabase();
 </script>
 </body>
 </html>
