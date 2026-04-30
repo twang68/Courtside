@@ -701,72 +701,7 @@ body::before{
 <div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-let courts=[
-  {id:0,name:"UCSD North Tennis Courts",sport:"Tennis",sportIcon:"Tennis",
-   address:"UCSD Campus, La Jolla",distance:"0.8 mi",
-   courts:8,open:1,status:"busy",statusLabel:"Busy",
-   wait:"15 – 25 min",lights:true,parking:"Limited",bathroom:"Nearby",free:true,reservation:false,
-   updatedMin:14,checkinsHour:3,
-   notes:"Club practice occupies courts 1–4 on weekday evenings. Arrive before 5 PM for best availability.",
-   checkins:[
-     {user:"J",name:"Jake",time:"6:12 PM",text:"1 court open on the far side, no queue"},
-     {user:"A",name:"Alicia",time:"5:48 PM",text:"Full — club practice taking 4 courts"},
-     {user:"M",name:"Marcos",time:"5:21 PM",text:"2 courts available, moderate congestion"},
-   ],
-   schedule:[{time:"7 – 9 AM",pct:15,label:"Open"},{time:"12 – 2 PM",pct:45,label:"Moderate"},{time:"5 – 8 PM",pct:95,label:"Full"},{time:"8 – 10 PM",pct:55,label:"Better"}]},
-  {id:1,name:"La Jolla Rec Center",sport:"Tennis & Pickleball",sportIcon:"Tennis & Pickleball",
-   address:"615 Prospect St, La Jolla",distance:"1.4 mi",
-   courts:6,open:0,status:"full",statusLabel:"Full",
-   wait:"20 – 30 min",lights:true,parking:"Easy",bathroom:"Yes",free:false,reservation:true,
-   updatedMin:9,checkinsHour:5,
-   notes:"Weekend reservations strongly advised. Dedicated pickleball 4–6 PM on weekdays.",
-   checkins:[
-     {user:"S",name:"Sofia",time:"6:18 PM",text:"Every court occupied — 20 min estimated wait"},
-     {user:"R",name:"Ryan",time:"5:55 PM",text:"Full capacity, reservation holders only"},
-   ],
-   schedule:[{time:"7 – 9 AM",pct:30,label:"Light"},{time:"12 – 2 PM",pct:65,label:"Busy"},{time:"5 – 8 PM",pct:100,label:"Full"},{time:"8 – 10 PM",pct:45,label:"Moderate"}]},
-  {id:2,name:"Doyle Park Courts",sport:"Tennis",sportIcon:"Tennis",
-   address:"Doyle Community Park, Pacific Beach",distance:"2.1 mi",
-   courts:6,open:3,status:"light",statusLabel:"Light traffic",
-   wait:"No wait",lights:false,parking:"Easy",bathroom:"Yes",free:true,reservation:false,
-   updatedMin:22,checkinsHour:2,
-   notes:"No lighting — closes at dusk. A peaceful setting, ideal for daytime sessions.",
-   checkins:[
-     {user:"K",name:"Kai",time:"5:50 PM",text:"3 courts free, excellent conditions"},
-     {user:"P",name:"Priya",time:"5:10 PM",text:"Light — just a couple of groups"},
-   ],
-   schedule:[{time:"7 – 9 AM",pct:20,label:"Open"},{time:"12 – 2 PM",pct:40,label:"Light"},{time:"5 – 7 PM",pct:60,label:"Moderate"},{time:"After dusk",pct:0,label:"Closed"}]},
-  {id:3,name:"Nobel Athletic Area",sport:"Tennis & Pickleball",sportIcon:"Tennis & Pickleball",
-   address:"Nobel Drive, Clairemont",distance:"2.7 mi",
-   courts:4,open:0,status:"unknown",statusLabel:"Unknown",
-   wait:"—",lights:true,parking:"Easy",bathroom:"Yes",free:true,reservation:false,
-   updatedMin:95,checkinsHour:0,
-   notes:"No recent intelligence available. Be the first member to report conditions.",
-   checkins:[],
-   schedule:[{time:"7 – 9 AM",pct:25,label:"Light"},{time:"12 – 2 PM",pct:50,label:"Moderate"},{time:"5 – 8 PM",pct:75,label:"Busy"},{time:"8 – 10 PM",pct:40,label:"Moderate"}]},
-  {id:4,name:"Morley Field Tennis",sport:"Tennis",sportIcon:"Tennis",
-   address:"Balboa Park, San Diego",distance:"3.2 mi",
-   courts:20,open:8,status:"open",statusLabel:"Available",
-   wait:"No wait",lights:true,parking:"Easy",bathroom:"Yes",free:false,reservation:true,
-   updatedMin:6,checkinsHour:4,
-   notes:"San Diego's premier public tennis facility. Online reservations available. Courts 1–8 fully lit.",
-   checkins:[
-     {user:"D",name:"Danny",time:"6:20 PM",text:"8 or more courts available — excellent evening"},
-     {user:"L",name:"Lisa",time:"6:05 PM",text:"Plenty of space, all lights operational"},
-     {user:"T",name:"Tristan",time:"5:40 PM",text:"Booked court 14 online with ease"},
-   ],
-   schedule:[{time:"7 – 9 AM",pct:40,label:"Moderate"},{time:"12 – 2 PM",pct:55,label:"Moderate"},{time:"5 – 8 PM",pct:70,label:"Busy"},{time:"8 – 10 PM",pct:35,label:"Light"}]},
-  {id:5,name:"Pacific Beach Pickleball",sport:"Pickleball",sportIcon:"Pickleball",
-   address:"Kate Sessions Park, PB",distance:"2.0 mi",
-   courts:8,open:5,status:"open",statusLabel:"Available",
-   wait:"No wait",lights:false,parking:"Moderate",bathroom:"Nearby",free:true,reservation:false,
-   updatedMin:31,checkinsHour:2,
-   notes:"Dedicated pickleball facility. Mornings draw the most activity; evenings are generally relaxed.",
-   checkins:[
-     {user:"C",name:"Carmen",time:"5:15 PM",text:"5 courts free, welcoming atmosphere"},
-   ],
-   schedule:[{time:"7 – 10 AM",pct:85,label:"Peak"},{time:"12 – 2 PM",pct:50,label:"Moderate"},{time:"5 – 7 PM",pct:40,label:"Light"},{time:"After dusk",pct:0,label:"Closed"}]},
-];
+let courts=[];
 
 let savedCourts=new Set();
 let activeFilter='all';
@@ -1051,13 +986,13 @@ async function loadCourtsFromSupabase() {
     .order("name");
 
   if (error) {
-    console.error("Error loading courts from Supabase:", error);
-    showToast("Could not load live courts");
-    renderCourts(courts);
-    renderSaved();
-    return;
-  }
-
+  console.error("Error loading courts from Supabase:", error);
+  showToast("Could not load live courts");
+  renderCourts([]);
+  renderSaved();
+  return;
+}
+  
   courts = data.map(convertSupabaseCourt);
 
   renderCourts(courts);
